@@ -1,4 +1,5 @@
-# mpr-gcloud-data ReadMe
+# mpr-gcloud-data 
+# ReadMe & Documentation for MWrite Review Classifications using PeerBERT
 
 This collection of scripts run on GCloud on Vertex AI. The Trainer parts run on a User-Managed notebook, while the Predictor part runs on a Managed Notebook. 
 (A Managed Notebook might work for the Trainer part as well, but it is untested and could be prone to specific limitations.)
@@ -17,6 +18,7 @@ Other files like **pyproject.toml** and **setup.cfg** are also required by **job
 
 The code is heavily inspired by documentation from Vertex AI here: 
 https://github.com/GoogleCloudPlatform/vertex-ai-samples/blob/main/community-content/pytorch_text_classification_using_vertex_sdk_and_gcloud/pytorch-text-classification-vertex-ai-train-tune-deploy.ipynb
+
 In general, you will also need a good understanding of PyTorch, HuggingFace, and similar Deep Learning concepts for working with the trainer code to change and develop the models. 
 The code uses a custom Dataset class, as well as a custom tokenizer trained using M-Write data. 
 Read the research paper the models are built off on: https://dl.acm.org/doi/fullHtml/10.1145/3506860.3506892
@@ -31,6 +33,8 @@ While *us-east* is the closest datacenter to the UoM, *us-central* provides a lo
 ## Setup for the Predictor Code:
 
 Only one notebook is needed to run predictions: **mpr-peerbert-predictor.ipynb**
+
+You will need to set up a Managed Notebook in Vertex AI for this.
 
 Use region *us-central1 (Iowa)* when setting up this notebook.
 
@@ -62,16 +66,20 @@ Allocate enough CPU and GPU resources in set up. I recomend atleast an n1-standa
 Once inside the Jupyter Lab environment, retrieve the files from Github as needed. There are three notebooks, and one Python script:
 
 1. mpr-research-trainer.ipynb
+
     This is the notebook to use when you are designing and building you own models. Run the first code block by uncommenting all the lines the first time you set up your workspace. This will install all the libraries needed for you to run the code. Run this block first!
     There is a provison to set hyperparameters in a CLI fashion. That won't work in a Notebook, so you must set that on your own as you build your models. Look at the Config class to see the variables that are configurable. Currently, most variable should require no modifciations, the code is designed to run out of the box. 
     
 2. tokenizerMaker.ipynb
+
     This notebook will let you make custom tokenizers if for some reason you need to make new ones not avaiable in thw mor-research-tokenizers bucket already. You'll have to retrain the whole model from scratch. Stick to the default.
     
 3. task.py
+
     Located in src/trainer/, task.py is basically a script version of mpr-research-trainer.ipynb that is configured by CLI arguments used in jobRunner.ipynb to run the training job on the cloud. The functions are same between this and the notebook, only the main function is slightly different. This is used to build the app that runs the Training Job.
     
 4. jobRunner.ipynb
+
     This notebook sets up and runs the actual training Job for your models. Use this once you are satisfied with your model settings and performance and are ready to deploy. Remember that you will need to train and deploy two models for each tier level of predictions seperately (Or use a loop to iterate through each level like in the script).
     
 ---
