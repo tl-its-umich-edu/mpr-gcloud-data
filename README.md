@@ -23,6 +23,8 @@ In general, you will also need a good understanding of PyTorch, HuggingFace, and
 The code uses a custom Dataset class, as well as a custom tokenizer trained using M-Write data. 
 Read the research paper the models are built off on: https://dl.acm.org/doi/fullHtml/10.1145/3506860.3506892
 
+Github Repo for the code that sends data to BigQuery from the MWrite database: https://github.com/tl-its-umich-edu/mpr-research-data
+
 The project used in GCloud is **MWrite Research** with a project ID of *mwrite-a835*.
 You will need access to this project, most likely through *gcp-mwrite@umich.edu*. 
 
