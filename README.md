@@ -1,44 +1,57 @@
-# mpr-gcloud-data
+# mpr-gcloud-data ReadMe
 
 This collection of scripts run on GCloud on Vertex AI. The Trainer parts run on a User-Managed notebook, while the Predictor part runs on a Managed Notebook. 
 (A Managed Notebook might work for the Trainer part as well, but it is untested and could be prone to specific limitations.)
 
 
-The Predictor code is one single notebook called mpr-peerbert-predictor.ipynb that must run in a Managed Notebook to allow for scheduling. 
+## Before you begin
+
+The Predictor code is one single notebook called **mpr-peerbert-predictor.ipynb** that must run in a Managed Notebook to allow for scheduling. 
 
 All other files are for the Trainer side code, with the keys ones being:
 - mpr-research-trainer.ipynb
 - tokenizerMaker.ipynb
 - task.py (located in src/trainer)
 - jobRunner.ipynb
-Other files like pyproject.toml and setup.cfg are also required by jobRunner.ipynb to build the trainer code to use on Vertex AI, but are supplementary.
+Other files like **pyproject.toml** and **setup.cfg** are also required by **jobRunner.ipynb** to build the trainer code to use on Vertex AI, but are supplementary.
 
-The code is heavily inspired by documentation from Vertex AI here: https://github.com/GoogleCloudPlatform/vertex-ai-samples/blob/main/community-content/pytorch_text_classification_using_vertex_sdk_and_gcloud/pytorch-text-classification-vertex-ai-train-tune-deploy.ipynb
-In general, you will also need a good understanding of PyTorch, HuggingFace, and similar Deep Learning concepts. The code uses a custom Dataset class, as well as a custom tokenizer trained using M-Write data. 
+The code is heavily inspired by documentation from Vertex AI here: 
+https://github.com/GoogleCloudPlatform/vertex-ai-samples/blob/main/community-content/pytorch_text_classification_using_vertex_sdk_and_gcloud/pytorch-text-classification-vertex-ai-train-tune-deploy.ipynb
+In general, you will also need a good understanding of PyTorch, HuggingFace, and similar Deep Learning concepts for working with the trainer code to change and develop the models. 
+The code uses a custom Dataset class, as well as a custom tokenizer trained using M-Write data. 
 Read the research paper the models are built off on: https://dl.acm.org/doi/fullHtml/10.1145/3506860.3506892
 
+The project used in GCloud is **MWrite Research** with a project ID of *mwrite-a835*.
+You will need access to this project, most likely through *gcp-mwrite@umich.edu*. 
 
-Setup for the Predictor Code:
+While *us-east* is the closest datacenter to the UoM, *us-central* provides a lot more services and needed configurtaions to run the project. While certain buckets and notebooks can be run across many regions, it is more efficient to stick to just one for consistency. *us-central* hence is the primary region of choice for most tasks and services used. Some buckets currently are multi-region but should be moved to a single region in the future.
 
-Only one notebook is needed to run predictions: mpr-peerbert-predictor.ipynb
+---
+
+## Setup for the Predictor Code:
+
+Only one notebook is needed to run predictions: **mpr-peerbert-predictor.ipynb**
+
+Use region *us-central1 (Iowa)* when setting up this notebook.
 
 This does not have to run on a powerful configuration, but it will make debugging faster when manually running the notebook. I recomend atleast an n1-standard with 4 CPU cores, and atleast a Tesla T4. I recommend going with much more power when scheduling the notebook using the Notebook Executor in the left panel, so that these predictions happen quickly. THe code scales up well with the resources avaible. 
 
 The notebook has the provision to be adjusted via hyperparameters through a CLI, but that is not used here. This for future use cases.
 
-Note: You ould run the code as a user-managed notebook but you will lose the ability to schedule it.
+Note: You could run the code as a user-managed notebook but you will lose the ability to schedule it.
 
+---
 
-Setup for the Trainer Code:
+## Setup for the Trainer Code:
 
-These notebooks and scripts are only if you need to redeploy a model, or train new models on new data or model structures. Look at the User-Managed Notebook mpr-research-predictor.ipynb for handling predictions.
+These notebooks and scripts are only if you need to redeploy a model, or train new models on new data or model structures. Look at the User-Managed Notebook **mpr-research-predictor.ipynb** for handling predictions.
 
-Run Notebooks in US-east or US-central (this is preferred). 
+Use region *us-central1 (Iowa)* when setting up this notebook.
 
 To set up a new User-Managed Notebook (this is a misnomer, you can have multiple notebooks in this, it's more of an environment)
 Go to Vertex AI -> Workbench -> User-Managed Notebook -> New Notebook
 
-Or, go to 'mpr-peerbert-pipeline' for the orginal version of this notebook.
+Or, go to *mpr-peerbert-pipeline* for the orginal version of this notebook.
 
 If opening a new notebook, you MUST make sure the environment is set to Python with nothing else installed.
 You must install PyTorch and the required libraries manually afterwards, as there is a bug that prevents the GPU from being detected correctly, and the code will not work.
@@ -61,6 +74,31 @@ Once inside the Jupyter Lab environment, retrieve the files from Github as neede
 4. jobRunner.ipynb
     This notebook sets up and runs the actual training Job for your models. Use this once you are satisfied with your model settings and performance and are ready to deploy. Remember that you will need to train and deploy two models for each tier level of predictions seperately (Or use a loop to iterate through each level like in the script).
     
+---
+
+## Under Construction - Buckets and needed files
+
+tokenizerBucketName: str = 'mpr-research-tokenizers'
+modelBucketName: str = 'mpr-research-models'
+dataBucketName: str = 'mwrite-data-bucket-1'
+
+predResultsBucketName: str = 'mpr-research-prediction-results'
+
+---
+
+## Under Construction - BigQuery connections
+
+dataTableID: str = 'mwrite-a835.mpr_research_uploaded_dataset.course-upload-data'
+timestampTableID: str = 'mwrite-a835.mpr_research_uploaded_dataset.course-upload-timestamp'
+predictTableID: str = 'mwrite-a835.mpr_research_predicted_dataset.predicted-data'
+
+---
+
+## Under Construction - Overview of Pipeline
+
+---
+
+## Misc. Notes about pipeline
    
 The following are notes about some specific quirks made to model training behaviour that significantly deviate from the code used to obtain the results in the paper. These are considerably significant in terms of how model performance is impacted. 
 
@@ -79,3 +117,4 @@ This needs two unique models to be designed from two seperate sets of training d
 Currently, Vertex AI does not support having two models at the endpoint for a task like this. They do plan to provison for this, but this a niche usecase.
 
 In fact, there is no need to even make a task.py file and make a Job because of the current limitations of Vertex AI. The trainer notebook can save the model to buckets as well, which the predictor notebook can use. I have still kept it in for if in some point in the future Vertex AI expands support for multi-model endpoints, the basic buildings needed for the pipeline will be there to use. Similar case for the proof-of-concept single prediction handler class in the predictor notebook. It has no role now, but in the future it might.
+
