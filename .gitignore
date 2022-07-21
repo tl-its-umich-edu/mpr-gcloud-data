@@ -1,0 +1,4 @@
+tmp/
+dist/
+src/*.egg-info
+.ipynb_checkpoints
